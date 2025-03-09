@@ -1,27 +1,25 @@
-// Retrieve canvas elements and their drawing contexts
+// canvas.js
 const canvas = document.getElementById('pixel-canvas');
 const ctx = canvas.getContext('2d');
 const gridCanvas = document.getElementById('grid-canvas');
 const gridCtx = gridCanvas.getContext('2d');
 const cursorCanvas = document.getElementById('cursor-canvas');
 const cursorCtx = cursorCanvas.getContext('2d');
-
-// Elements for displaying canvas dimensions
 const canvasWidthDisplay = document.getElementById('canvas-width-display');
 const canvasHeightDisplay = document.getElementById('canvas-height-display');
 const canvasContainer = document.querySelector('.canvas-container');
 
-const pixelSize = 10; // Each pixel measures 10x10 pixels
+const pixelSize = 10; // Each pixel is 10x10 pixels
 
-let showGrid = true;       // Control flag for grid display
-let savedImageData = null; // For storing canvas state for reset
+let showGrid = true; // 控制网格显示
+let savedImageData = null; // For reset
 
-// Initialize the canvas with given dimensions and artwork ID
+// 初始化画布
 function initCanvas(width, height, artworkId) {
     const canvasWidth = width * pixelSize;
     const canvasHeight = height * pixelSize;
 
-    // Set canvas, grid, and cursor canvas sizes
+    // 设置画布尺寸
     canvas.width = canvasWidth;
     canvas.height = canvasHeight;
     gridCanvas.width = canvasWidth;
@@ -29,39 +27,41 @@ function initCanvas(width, height, artworkId) {
     cursorCanvas.width = canvasWidth;
     cursorCanvas.height = canvasHeight;
 
-    // Update displayed canvas dimensions
+    // 更新显示的宽度和高度
     canvasWidthDisplay.textContent = width;
     canvasHeightDisplay.textContent = height;
 
-    // Save current state, update transformation, and draw grid
+    // 保存状态并初始化画布位置
     saveState();
     updateTransform();
     drawGrid();
 
-    // Adjust scaling to fit the canvas within its container
+    // 根据画布大小调整缩放比例
     adjustScaleToFitCanvas();
 }
 
-// Adjust the canvas scale so that it fits within the container
+// 调整缩放比例以使画布完全可见
 function adjustScaleToFitCanvas() {
     const containerWidth = canvasContainer.clientWidth;
     const containerHeight = canvasContainer.clientHeight;
+
     const canvasWidth = canvas.width;
     const canvasHeight = canvas.height;
 
-    // Calculate scale factors for width and height and choose the smaller
+    // 计算缩放比例
     const scaleX = containerWidth / canvasWidth;
     const scaleY = containerHeight / canvasHeight;
     const newScale = Math.min(scaleX, scaleY);
     defaultScale = newScale;
     scale = defaultScale;
 
-    // Apply the new scale
+    // 更新缩放比例
     zoomCanvas(newScale);
 }
 
-// Update canvas container size and apply scaling transformation
+// 更新容器的缩放和尺寸
 function updateTransform() {
+    // 设置容器的尺寸
     canvasContainer.style.width = `${canvas.width * scale}px`;
     canvasContainer.style.height = `${canvas.height * scale}px`;
     canvas.style.width = `${canvas.width * scale}px`;
@@ -71,24 +71,28 @@ function updateTransform() {
     cursorCanvas.style.width = `${canvas.width * scale}px`;
     cursorCanvas.style.height = `${canvas.height * scale}px`;
 
-    // Center the container and apply scaling
-    canvasContainer.style.transform = `translate(-50%, -50%) scale(${scale})`;
+    // 更新容器的缩放
+    // canvasContainer.style.transform = `translate(-50%, -50%) scale(${scale})`;
+    canvasContainer.style.transform = `
+        translate(-50%, -50%) 
+        translate(${translateX}px, ${translateY}px) 
+        scale(${scale})
+    `;
 }
 
-// Draw a grid overlay on the canvas
+// 绘制网格
 function drawGrid() {
     gridCtx.save();
     gridCtx.strokeStyle = '#cccccc';
     gridCtx.lineWidth = 0.5;
 
-    // Draw vertical grid lines
     for (let x = 0; x <= canvas.width; x += pixelSize) {
         gridCtx.beginPath();
         gridCtx.moveTo(x, 0);
         gridCtx.lineTo(x, canvas.height);
         gridCtx.stroke();
     }
-    // Draw horizontal grid lines
+
     for (let y = 0; y <= canvas.height; y += pixelSize) {
         gridCtx.beginPath();
         gridCtx.moveTo(0, y);
@@ -98,119 +102,152 @@ function drawGrid() {
     gridCtx.restore();
 }
 
-// Toggle the grid visibility and redraw accordingly
 function toggleGrid() {
     showGrid = !showGrid;
     redrawGrid();
 }
 
-// Clear the grid and redraw it if necessary
 function redrawGrid() {
-    gridCtx.clearRect(0, 0, canvas.width, canvas.height);
+    gridCtx.clearRect(0, 0, canvas.width, canvas.height); // 清空网格画布
     if (showGrid) {
         drawGrid();
     }
 }
 
-// Save the current canvas state for potential reset
+// 用于reset画布变换
 function saveCanvasState() {
     savedImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 }
 
-// Bind the toggle grid button click event
+// 添加切换网格按钮
 document.getElementById('toggle-grid').addEventListener('click', toggleGrid);
 
-// Draw a brush preview at the given canvas coordinates
+// 绘制笔刷预览框
 function drawBrushPreview(x, y) {
-    console.log('Drawing brush preview at:', x, y);
-    cursorCtx.clearRect(0, 0, cursorCanvas.width, cursorCanvas.height);
+    console.log('Drawing brush preview at:', x, y); // 确保函数执行
+    
+	cursorCtx.clearRect(0, 0, cursorCanvas.width, cursorCanvas.height);
 
-    // Calculate the top-left position of the preview rectangle
+    // 找到光标所在的格子
     const startX = x - Math.floor(brushSize / 2);
-    const startY = y - Math.floor(brushSize / 2);
+	const startY = y - Math.floor(brushSize / 2);
 
-    // Draw the preview rectangle with a red outline
-    cursorCtx.strokeStyle = 'rgba(255, 0, 0, 0.75)';
-    cursorCtx.lineWidth = 1.5;
+    // 绘制矩形框
+    cursorCtx.strokeStyle = 'rgba(255, 0, 0, 0.75)'; // 框的颜色和透明度
+    cursorCtx.lineWidth = 1.5; // 框的线宽
     cursorCtx.strokeRect(
-        startX * pixelSize,
-        startY * pixelSize,
-        brushSize * pixelSize,
-        brushSize * pixelSize
+        startX * pixelSize, // 起始 X
+        startY * pixelSize, // 起始 Y
+        brushSize * pixelSize, // 宽度
+        brushSize * pixelSize // 高度
     );
 }
 
-// Adjust canvas scale on window resize
 window.addEventListener('resize', () => {
     adjustScaleToFitCanvas();
     updateTransform();
 });
 
-// Set up mouse event listeners once the DOM is fully loaded
 document.addEventListener('DOMContentLoaded', function () {
-    console.log('DOM fully loaded and parsed');
+    console.log('DOM fully loaded and parsed'); // 确保 DOM 加载完成
     if (!canvas) {
-        console.error('Canvas element not found!');
+        console.error('Canvas element not found!'); // 确保 canvas 元素存在
         return;
     }
-    console.log('Canvas element found:', canvas);
-    canvas.focus();
+    console.log('Canvas element found:', canvas); // 打印 canvas 元素
+    canvas.focus(); // 确保 canvas 元素获得焦点
 
-    console.log('Binding mouse events...');
+    console.log('Binding mouse events...'); // 确保事件绑定代码执行
     canvas.addEventListener('mousedown', (e) => {
-        console.log('Mouse down event triggered');
-        const x = Math.floor(e.offsetX / pixelSize);
-        const y = Math.floor(e.offsetY / pixelSize);
+        if (e.button === 1 || e.ctrlKey) {
+            isDragging = true;
+            startX = e.clientX - translateX;
+            startY = e.clientY - translateY;
+            canvasContainer.style.cursor = 'grabbing'; // Change cursor to indicate dragging
+            e.preventDefault(); // Prevent default behavior (like scrolling)
+            return; // Exit so drawing events aren't processed here.
+        }
+        console.log('Mouse down event triggered'); // 确保事件触发
+        // const x = Math.floor(e.offsetX / pixelSize);
+        // const y = Math.floor(e.offsetY / pixelSize);
+        const rect = canvas.getBoundingClientRect();
+        const effectiveScale = rect.width / canvas.width;
+        // Adjust mouse coordinates by subtracting the canvas's top-left position
+        // and then dividing by the current scale factor.
+        const x = Math.floor((e.clientX - rect.left) / effectiveScale / pixelSize);
+        const y = Math.floor((e.clientY - rect.top) / effectiveScale / pixelSize);
 
-        // Draw brush preview on the cursor canvas
+        // 在光标画布上绘制笔刷预览框
         drawBrushPreview(x, y);
-        isDrawing = true;      // Start drawing
-        handleDraw(x, y);      // Draw the initial pixel
+
+        isDrawing = true; // Start drawing
+        handleDraw(x, y); // Draw the initial pixel
     });
-    console.log('Mouse down event bound.');
+    console.log('Mouse down event bound.'); // 确保事件绑定完成
 
     canvas.addEventListener('mousemove', (e) => {
-        console.log('Mouse move event triggered');
-        const x = Math.floor(e.offsetX / pixelSize);
-        const y = Math.floor(e.offsetY / pixelSize);
+        if (isDragging) {
+            translateX = e.clientX - startX;
+            translateY = e.clientY - startY;
+            updateTransform();
+        }
+        if (!isDragging) {
+            console.log('Mouse move event triggered'); // 确保事件触发
+            // const x = Math.floor(e.offsetX / pixelSize);
+            // const y = Math.floor(e.offsetY / pixelSize);
+            const rect = canvas.getBoundingClientRect();
+            const effectiveScale = rect.width / canvas.width;
+            // Adjust mouse coordinates by subtracting the canvas's top-left position
+            // and then dividing by the current scale factor.
+            const x = Math.floor((e.clientX - rect.left) / effectiveScale / pixelSize);
+            const y = Math.floor((e.clientY - rect.top) / effectiveScale / pixelSize);
 
-        // Update the brush preview position
-        drawBrushPreview(x, y);
-        if (isDrawing) {
-            handleDraw(x, y);  // Draw pixel only when mouse is pressed
+            // 在光标画布上绘制笔刷预览框
+            drawBrushPreview(x, y);
+
+            if (isDrawing) { // Only draw if the mouse is pressed
+                handleDraw(x, y);
+            }
         }
     });
 
     canvas.addEventListener('mouseup', () => {
-        console.log('Mouse up event triggered');
-        isDrawing = false;     // Stop drawing
-        saveState();           // Save current canvas state
+        console.log('Mouse up event triggered'); // 确保事件触发
+        isDrawing = false; // Stop drawing
+        isDragging = false;
+        canvasContainer.style.cursor = 'grab';
+        saveState();
     });
 
     canvas.addEventListener('mouseleave', () => {
-        console.log('Mouse leave event triggered');
-        isDrawing = false;     // Stop drawing when mouse leaves canvas
-        saveState();           // Save current canvas state
+        console.log('Mouse leave event triggered'); // 确保事件触发
+        isDrawing = false; // Stop drawing if the mouse leaves the canvas
+        isDragging = false;
+        canvasContainer.style.cursor = 'grab';
+        saveState();
     });
 });
 
-// Rotate canvas buttons
+// 旋转画布
 document.getElementById('rotate-left').addEventListener('click', () => {
-    rotateCanvas(canvas, ctx, -90);  // Rotate canvas 90° counterclockwise
+    rotateCanvas(canvas, ctx, -90); // 逆时针旋转 90°
     rotation -= 90;
+    // updateTransform();
 });
 
 document.getElementById('rotate-right').addEventListener('click', () => {
-    rotateCanvas(canvas, ctx, 90);   // Rotate canvas 90° clockwise
+    rotateCanvas(canvas, ctx, 90); // 顺时针旋转 90°
     rotation += 90;
+    // updateTransform();
 });
 
-// Bind horizontal flip button
+// 绑定按钮点击事件
 document.getElementById('horizontal-flip').addEventListener('click', function () {
     flipHorizontal(canvas, ctx);
 });
 
-// Bind vertical flip button
 document.getElementById('vertical-flip').addEventListener('click', function () {
     flipVertical(canvas, ctx);
 });
+
+canvasContainer.style.cursor = 'grab';

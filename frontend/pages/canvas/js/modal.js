@@ -1,4 +1,4 @@
-// Retrieve modal elements and inputs
+// modal.js
 const modal = document.getElementById('canvas-size-modal');
 const canvasWidthInput = document.getElementById('canvas-width');
 const canvasHeightInput = document.getElementById('canvas-height');
@@ -10,20 +10,18 @@ const maxPixels = 200;
 
 let artworkId;
 
-// Show the modal on page load
+// 显示模态窗口
 modal.style.display = 'flex';
 
-// Validate input value against minimum and maximum limits for a given dimension
 function validateInput(value, min, max, dimension) {
     if (value < min) {
         return `The minimum allowed ${dimension} is ${min} pixels. Please enter a larger value.`;
     } else if (value > max) {
         return `The maximum allowed ${dimension} is ${max} pixels. Please enter a smaller value.`;
     }
-    return ''; // Input is valid
+    return ''; // 输入有效，返回空字符串
 }
 
-// When the confirm button is clicked, validate inputs and initialize the canvas
 confirmButton.addEventListener('click', () => {
     const width = parseInt(canvasWidthInput.value);
     const height = parseInt(canvasHeightInput.value);
@@ -47,7 +45,6 @@ confirmButton.addEventListener('click', () => {
     initCanvas(width, height, artworkId);
 });
 
-// Close the modal by hiding it
 function closeModal() {
     modal.style.display = 'none';
 }

@@ -1,39 +1,37 @@
-// Default transformation parameters
-const defaultRotation = 0;                     // Default rotation angle (degrees)
-const defaultX = 0;                            // Default translation X
-const defaultY = 0;                            // Default translation Y
-const scaleStep = 0.1;                         // Step increment for scaling
-const defaultIsFlippedHorizontal = false;      // Default horizontal flip state
-const defaultIsFlippedVertical = false;        // Default vertical flip state
+// transform.js
+const defaultRotation = 0;
+const defaultX = 0;
+const defaultY = 0;
+const scaleStep = 0.1;
+const defaultIsFlippedHorizontal = false;
+const defaultIsFlippedVertical = false;
 
-let defaultScale = 1;                          // Initial scale factor
-let scale = defaultScale;                      // Current scale factor
-let rotation = defaultRotation;                // Current rotation angle
-let isDragging = false;                        // Flag for dragging state
-let startX, startY;                            // Starting coordinates for dragging
-let translateX = defaultX, translateY = defaultY; // Current translation values
-let isFlippedHorizontal = defaultIsFlippedHorizontal; // Current horizontal flip state
-let isFlippedVertical = defaultIsFlippedVertical;     // Current vertical flip state
+let defaultScale = 1;
+let scale = defaultScale;
+let rotation = defaultRotation;
+let isDragging = false;
+let startX, startY;
+let translateX = defaultX, translateY = defaultY;
+let isFlippedHorizontal = defaultIsFlippedHorizontal;
+let isFlippedVertical = defaultIsFlippedVertical;
 
-// Rotate the canvas pixel data by a specified angle (in degrees)
 function rotateCanvas(canvas, ctx, degrees) {
-    // Normalize negative angles to positive equivalents
+    // turn negative degree to that between 0 and 360
     degrees = ((degrees % 360) + 360) % 360;
 
     const width = canvas.width;
     const height = canvas.height;
 
-    // Get the current pixel data from the canvas
     const imageData = ctx.getImageData(0, 0, width, height);
     const data = imageData.data;
 
-    // Create a new canvas to store the rotated pixel data
+    // create a new canvas to store the rotated pixel info
     const newCanvas = document.createElement('canvas');
     const newCtx = newCanvas.getContext('2d');
 
     let newWidth, newHeight;
 
-    // Adjust new canvas dimensions based on rotation angle
+    // resize canvas according to new degrees
     if (degrees === 90 || degrees === 270) {
         newWidth = height;
         newHeight = width;
@@ -45,52 +43,52 @@ function rotateCanvas(canvas, ctx, degrees) {
     newCanvas.width = newWidth;
     newCanvas.height = newHeight;
 
-    // Create a new image data object for the rotated data
+    // create new pixel data
     const newImageData = newCtx.createImageData(newWidth, newHeight);
     const newData = newImageData.data;
 
-    // Rotate pixel data based on the specified angle
+    // new locs after rotation
     for (let y = 0; y < height; y++) {
         for (let x = 0; x < width; x++) {
             const index = (y * width + x) * 4;
             let newX, newY, newIndex;
 
             if (degrees === 90) {
-                // Rotate 90° to the right
+                // 90 degree to the right
                 newX = height - y - 1;
                 newY = x;
             } else if (degrees === 180) {
-                // Rotate 180°
+                // 180 degree
                 newX = width - x - 1;
                 newY = height - y - 1;
             } else if (degrees === 270) {
-                // Rotate 90° to the left (or 270° to the right)
+                // 90 degree to the left or 270 degree to the right
                 newX = y;
                 newY = width - x - 1;
             } else {
-                // No rotation
+                // no rotation
                 newX = x;
                 newY = y;
             }
 
             newIndex = (newY * newWidth + newX) * 4;
 
-            // Copy RGBA values from the original image data
+            // copy pixel data
             newData[newIndex] = data[index];         // R
-            newData[newIndex + 1] = data[index + 1];     // G
-            newData[newIndex + 2] = data[index + 2];     // B
-            newData[newIndex + 3] = data[index + 3];     // A
+            newData[newIndex + 1] = data[index + 1]; // G
+            newData[newIndex + 2] = data[index + 2]; // B
+            newData[newIndex + 3] = data[index + 3]; // A
         }
     }
 
-    // Update the canvas size and draw the rotated image data
+    // rewrite the canvas data back to the 
     canvas.width = newWidth;
     canvas.height = newHeight;
     ctx.putImageData(newImageData, 0, 0);
 }
 
-// Flip the canvas horizontally
-function flipHorizontal(canvas, ctx) {
+// 水平翻转
+function flipHorizontal(canvas,ctx) {
     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
     const data = imageData.data;
     const width = canvas.width;
@@ -101,7 +99,6 @@ function flipHorizontal(canvas, ctx) {
             const index1 = (y * width + x) * 4;
             const index2 = (y * width + (width - x - 1)) * 4;
 
-            // Swap pixel data (RGBA) between symmetric positions
             for (let i = 0; i < 4; i++) {
                 const temp = data[index1 + i];
                 data[index1 + i] = data[index2 + i];
@@ -115,8 +112,8 @@ function flipHorizontal(canvas, ctx) {
     console.log("Canvas is transformed horizontally");
 }
 
-// Flip the canvas vertically
-function flipVertical(canvas, ctx) {
+// 垂直翻转
+function flipVertical(canvas,ctx) {
     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
     const data = imageData.data;
     const width = canvas.width;
@@ -127,7 +124,6 @@ function flipVertical(canvas, ctx) {
             const index1 = (y * width + x) * 4;
             const index2 = ((height - y - 1) * width + x) * 4;
 
-            // Swap pixel data (RGBA) between symmetric positions vertically
             for (let i = 0; i < 4; i++) {
                 const temp = data[index1 + i];
                 data[index1 + i] = data[index2 + i];
@@ -141,13 +137,13 @@ function flipVertical(canvas, ctx) {
     console.log("Canvas is transformed vertically");
 }
 
-// Zoom the canvas by setting a new scale and updating the transform
+
+// 缩放画布
 function zoomCanvas(newScale) {
     scale = newScale;
     updateTransform();
 }
 
-// Bind zoom in/out buttons to adjust the canvas scale
 document.getElementById('zoomin-tool').addEventListener('click', () => {
     zoomCanvas(scale + scaleStep);
 });
@@ -156,13 +152,13 @@ document.getElementById('zoomout-tool').addEventListener('click', () => {
     zoomCanvas(scale - scaleStep);
 });
 
-// Reset the canvas to the saved state and default transformation parameters
+// 重置画布
 function resetCanvas() {
     if (savedImageData) {
-        ctx.putImageData(savedImageData, 0, 0); // Restore the saved canvas state
+        ctx.putImageData(savedImageData, 0, 0); // 恢复到保存的状态
     }
 
-    // Reset transformation parameters to their default values
+    // 重置变换参数
     translateX = defaultX;
     translateY = defaultY;
     rotation = defaultRotation;
@@ -170,11 +166,11 @@ function resetCanvas() {
     isFlippedHorizontal = false;
     isFlippedVertical = false;
 
-    // Update the canvas transform
+    // 更新变换
     updateTransform();
 
     console.log("Canvas's transformation has been reseted");
 }
 
-// Bind the reset button to the resetCanvas function
+// 绑定重置按钮事件
 document.getElementById('reset-canvas').addEventListener('click', resetCanvas);

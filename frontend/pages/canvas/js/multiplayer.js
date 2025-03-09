@@ -1,33 +1,28 @@
-// Parse URL parameters from the current page's URL
+// 解析 URL 参数
 const urlParams = new URLSearchParams(window.location.search);
-const mode = urlParams.get('mode'); // Retrieve the value of the "mode" parameter
+const mode = urlParams.get('mode');
 
-// Get the multiplayer mode panel element
+// 获取多人模式面板
 const multiplayerPanel = document.getElementById('multiplayer-panel');
 
-// Show the multiplayer panel if the mode is "multiplayer" and the panel element exists
+// 根据模式显示或隐藏面板
 if (mode === 'multiplayer' && multiplayerPanel) {
     multiplayerPanel.style.display = 'block';
 
-    // Get the invite friend button and finish drawing button
+    // 添加多人模式按钮的事件监听器
     const inviteButton = document.getElementById('invite-friend');
     const finishDrawingButton = document.getElementById('finish-drawing');
-    
-    // If the invite button exists, attach a click event listener
     if (inviteButton) {
         inviteButton.addEventListener('click', function () {
             alert('Invite link copied to clipboard!');
-            // Add actual invite logic here
+            // 这里可以添加实际的邀请逻辑
         });
     }
 
-    // If the finish drawing button exists, attach a click event listener.
-    // Note: The code uses 'completeDrawingButton', which appears to be a mistake.
-    // It likely should reference 'finishDrawingButton'.
     if (finishDrawingButton) {
         completeDrawingButton.addEventListener('click', function () {
             alert('Drawing marked as complete!');
-            // Add logic for marking the drawing as complete here
+            // 这里可以添加完成作画的逻辑
         });
     }
 }
